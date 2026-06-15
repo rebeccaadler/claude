@@ -1,6 +1,9 @@
-import { Heart, MapPin, Clock, Star, Bus, Map, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, MapPin, Clock, Star, Bus, Map, ChevronDown, ArrowRight, Route } from 'lucide-react';
 import type { Hike } from '../types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useWeather } from '../hooks/useWeather';
+import { PhotoGallery } from './PhotoGallery';
 
 interface Props {
   hike: Hike;
@@ -8,110 +11,155 @@ interface Props {
   onClick: (hike: Hike) => void;
 }
 
+const difficultyColor: Record<string, string> = {
+  Easy: '#4ade80',
+  Moderate: '#fbbf24',
+  Hard: '#f87171',
+};
+
 export function HikeCard({ hike, onToggleFavorite, onClick }: Props) {
-  const difficultyClass = {
-    Easy: 'difficulty-easy',
-    Moderate: 'difficulty-moderate',
-    Hard: 'difficulty-hard',
-  }[hike.difficulty];
+  const [expanded, setExpanded] = useState(false);
+  const weather = useWeather(hike.coordinates[0], hike.coordinates[1]);
+  const color = difficultyColor[hike.difficulty];
 
   return (
     <motion.div
-      className="glass-card overflow-hidden cursor-pointer group"
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      initial={{ opacity: 0, y: 20 }}
+      className="row-card"
+      style={{ borderTopColor: color }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.25 }}
     >
-      {/* Cover Image */}
-      <div className="relative overflow-hidden" style={{ aspectRatio: '3/2' }}>
-        <img
-          src={hike.coverPhoto}
-          alt={hike.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          onClick={() => onClick(hike)}
-        />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(10,26,15,0.95) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)' }} />
-
-        {/* Favorite Button */}
-        <button
-          className="absolute top-3 right-3 p-2 rounded-full z-10"
-          style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)' }}
-          onClick={e => { e.stopPropagation(); onToggleFavorite(hike.id); }}
-        >
-          <Heart size={16} fill={hike.isFavorite ? '#ef4444' : 'none'} color={hike.isFavorite ? '#ef4444' : 'white'} />
-        </button>
-
-        {/* Difficulty Badge */}
-        <div className="absolute top-3 left-3">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${difficultyClass}`}>
-            {hike.difficulty}
-          </span>
-        </div>
-
-        {/* Title overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4" onClick={() => onClick(hike)}>
-          <h3 className="font-serif text-xl font-bold text-white mb-1">{hike.name}</h3>
-          <div className="flex items-center gap-1.5">
-            <MapPin size={13} style={{ color: '#8aab8f' }} />
-            <span className="text-xs" style={{ color: '#8aab8f' }}>{hike.location}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Card Body */}
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1">
-            {[1,2,3,4,5].map(s => (
-              <Star key={s} size={13} fill={s <= hike.rating ? '#c9a84c' : 'none'} stroke={s <= hike.rating ? '#c9a84c' : '#4a7c59'} />
-            ))}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Clock size={13} style={{ color: '#8aab8f' }} />
-            <span className="text-xs" style={{ color: '#8aab8f' }}>{hike.duration}</span>
-          </div>
-        </div>
-
-        <p className="text-xs leading-relaxed mb-4 line-clamp-2" style={{ color: '#8aab8f' }}>
-          {hike.description}
-        </p>
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <a
-            href={hike.moovitLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="moovit-btn flex-1 justify-center text-xs py-2"
-            onClick={e => e.stopPropagation()}
-          >
-            <Bus size={13} />
-            Moovit
-          </a>
-          {hike.googleMapsLink && (
-            <a
-              href={hike.googleMapsLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-2 rounded-lg flex items-center gap-1.5 text-xs font-semibold"
-              style={{ background: 'rgba(74, 124, 89, 0.2)', border: '1px solid rgba(106, 171, 122, 0.25)', color: '#6aab7a' }}
-              onClick={e => e.stopPropagation()}
+      <div className="p-4 md:p-5 flex flex-col md:flex-row md:items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="font-serif text-xl font-bold truncate" style={{ color: '#e8f0e9' }}>{hike.name}</h3>
+            <button
+              onClick={e => { e.stopPropagation(); onToggleFavorite(hike.id); }}
+              className="p-1 rounded-full flex-shrink-0"
             >
-              <Map size={13} />
-              Maps
+              <Heart size={15} fill={hike.isFavorite ? '#ef4444' : 'none'} color={hike.isFavorite ? '#ef4444' : '#4a7c59'} />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="pill pill-neutral">
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: color, display: 'inline-block' }} />
+              {hike.difficulty}
+            </span>
+            <span className="pill pill-neutral">
+              <MapPin size={12} />
+              {hike.location}
+            </span>
+            <a href={hike.moovitLink} target="_blank" rel="noopener noreferrer" className="pill pill-moovit" onClick={e => e.stopPropagation()}>
+              <Bus size={12} />
+              Moovit
             </a>
+            <span className="pill pill-neutral">
+              <Clock size={12} />
+              {hike.duration}
+            </span>
+          </div>
+
+          {hike.trailMarkers && (
+            <div className="flex flex-wrap gap-2">
+              <span className="pill pill-neutral">
+                <Route size={12} />
+                {hike.trailMarkers}
+              </span>
+            </div>
           )}
-          <button
-            onClick={() => onClick(hike)}
-            className="px-3 py-2 rounded-lg flex items-center gap-1 text-xs font-semibold ml-auto"
-            style={{ background: 'rgba(201, 168, 76, 0.15)', border: '1px solid rgba(201, 168, 76, 0.3)', color: '#c9a84c' }}
-          >
-            Details
-            <ArrowRight size={12} />
-          </button>
         </div>
+
+        {weather && (
+          <div className="weather-box">
+            <span style={{ fontSize: 20 }}>{weather.emoji}</span>
+            <span className="text-sm font-semibold" style={{ color: '#e8f0e9' }}>{weather.tempF}°F</span>
+            <span className="text-[10px]" style={{ color: '#8aab8f' }}>{weather.condition}</span>
+          </div>
+        )}
       </div>
+
+      <button
+        onClick={() => setExpanded(v => !v)}
+        className="w-full flex items-center justify-center gap-1 py-2 text-xs font-medium"
+        style={{ color: '#8aab8f', borderTop: '1px solid rgba(106, 171, 122, 0.12)' }}
+      >
+        {expanded ? 'Show less' : 'Show more'}
+        <motion.span animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown size={14} />
+        </motion.span>
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="p-5 space-y-4" style={{ borderTop: '1px solid rgba(106, 171, 122, 0.12)' }}>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map(s => (
+                  <Star key={s} size={14} fill={s <= hike.rating ? '#c9a84c' : 'none'} stroke={s <= hike.rating ? '#c9a84c' : '#4a7c59'} />
+                ))}
+              </div>
+
+              {hike.description && (
+                <p className="text-sm leading-relaxed" style={{ color: '#b0c8b5' }}>{hike.description}</p>
+              )}
+
+              {hike.trailDescription && (
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#8aab8f' }}>Trail</h4>
+                  <p className="text-sm leading-relaxed" style={{ color: '#b0c8b5' }}>{hike.trailDescription}</p>
+                </div>
+              )}
+
+              {hike.notes && (
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#8aab8f' }}>Notes</h4>
+                  <p className="text-sm leading-relaxed" style={{ color: '#b0c8b5' }}>{hike.notes}</p>
+                </div>
+              )}
+
+              {hike.personalComments && (
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: '#8aab8f' }}>Personal Comments</h4>
+                  <p className="text-sm leading-relaxed italic" style={{ color: '#b0c8b5' }}>{hike.personalComments}</p>
+                </div>
+              )}
+
+              {hike.photos.length > 0 && <PhotoGallery photos={hike.photos} />}
+
+              <div className="flex gap-3 flex-wrap pt-1">
+                {hike.googleMapsLink && (
+                  <a
+                    href={hike.googleMapsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold"
+                    style={{ background: 'rgba(74, 124, 89, 0.2)', border: '1px solid rgba(106, 171, 122, 0.25)', color: '#6aab7a' }}
+                  >
+                    <Map size={13} />
+                    Google Maps
+                  </a>
+                )}
+                <button
+                  onClick={() => onClick(hike)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold ml-auto"
+                  style={{ background: 'rgba(201, 168, 76, 0.15)', border: '1px solid rgba(201, 168, 76, 0.3)', color: '#c9a84c' }}
+                >
+                  Full Details
+                  <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

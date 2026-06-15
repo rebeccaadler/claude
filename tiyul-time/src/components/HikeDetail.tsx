@@ -149,15 +149,6 @@ export function HikeDetail({ hike, onClose, onToggleFavorite, onEdit }: Props) {
                   <h3 className="font-serif text-lg font-semibold mb-3" style={{ color: '#c9a84c' }}>About this Hike</h3>
                   <p className="text-sm leading-relaxed" style={{ color: '#e8f0e9' }}>{hike.description}</p>
                 </div>
-                {hike.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {hike.tags.map(tag => (
-                      <span key={tag} className="px-3 py-1 rounded-full text-xs" style={{ background: 'rgba(74, 124, 89, 0.2)', color: '#6aab7a', border: '1px solid rgba(106, 171, 122, 0.2)' }}>
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
                 {hike.additionalLinks.length > 0 && (
                   <div className="glass-card p-4">
                     <h4 className="text-sm font-semibold mb-3" style={{ color: '#8aab8f' }}>Additional Resources</h4>

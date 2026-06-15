@@ -51,7 +51,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #0a1a0f 0%, #0d2218 50%, #0a1a0f 100%)' }}>
       <Navigation activeTab={store.activeTab} setActiveTab={store.setActiveTab} />
 
-      <main className="pt-20 pb-24 max-w-6xl mx-auto px-4">
+      <main className="pb-24 max-w-3xl mx-auto px-4">
         {/* Hikes Tab */}
         {store.activeTab === 'hikes' && (
           <div>
@@ -86,7 +86,7 @@ export default function App() {
                 <p className="text-sm mt-2" style={{ color: '#4a7c59' }}>Try adjusting your search or filters</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-4">
                 {store.filteredHikes.map(hike => (
                   <HikeCard
                     key={hike.id}
@@ -134,7 +134,7 @@ export default function App() {
                 <p className="text-sm mt-2" style={{ color: '#4a7c59' }}>Add hikes you want to do!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-4">
                 {store.filteredWishlist.map(hike => (
                   <WishlistCard
                     key={hike.id}
